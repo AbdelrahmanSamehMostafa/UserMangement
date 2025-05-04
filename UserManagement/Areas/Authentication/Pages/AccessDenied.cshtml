@@ -1,0 +1,10 @@
+@page "/AccessDenied"
+@model com.gbg.modules.utility.Areas.Authentication.Pages.AccessDeniedModel
+@{
+    ViewData["Title"] = "AccessDenied";
+}
+
+<h1 style="color: red;">@ViewData["Title"]</h1>
+
+<p>You do not have permission to access this page. Please log in to continue.</p>
+<a href="/Authentication/Login">Go to Login</a>

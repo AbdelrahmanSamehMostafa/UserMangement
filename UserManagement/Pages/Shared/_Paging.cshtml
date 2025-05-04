@@ -1,0 +1,68 @@
+@model dynamic
+
+@{
+    int TotalPages = (int)Math.Ceiling((double)Model.Count / Model.PageSize);
+    int CurrentPage = Model.PageNumber;
+    int PageSize = Model.PageSize;
+    int MaxPagesToShow = 5; // Number of pages to show at once
+
+    int startPage = Math.Max(1, CurrentPage - MaxPagesToShow / 2);
+    int endPage = Math.Min(TotalPages, startPage + MaxPagesToShow - 1);
+
+    if (endPage - startPage < MaxPagesToShow - 1)
+    {
+        startPage = Math.Max(1, endPage - MaxPagesToShow + 1);
+    }
+}
+
+<div class="pagination-container">
+    <p>Page @CurrentPage of @TotalPages</p>
+
+    <nav>
+        <ul class="pagination">
+            @if (CurrentPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-page-handler="OnGetAsync" asp-route-pageNumber="@(CurrentPage - 1)"
+                       asp-route-pageSize="@PageSize">Previous</a>
+                </li>
+            }
+            @if (startPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-page-handler="OnGetAsync" asp-route-pageNumber="1"
+                       asp-route-pageSize="@PageSize">1</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            }
+
+            @* Page Numbers in the Range *@
+            @for (int i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(CurrentPage == i ? "active" : "")">
+                    <a class="page-link" asp-page-handler="OnGetAsync" asp-route-pageNumber="@i"
+                       asp-route-pageSize="@PageSize">@i</a>
+                </li>
+            }
+
+            @* Last Page Link and Ellipsis *@
+            @if (endPage < TotalPages)
+            {
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                <li class="page-item">
+                    <a class="page-link" asp-page-handler="OnGetAsync" asp-route-pageNumber="@TotalPages"
+                       asp-route-pageSize="@PageSize">@TotalPages</a>
+                </li>
+            }
+
+            @* Next Button *@
+            @if (CurrentPage < TotalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-page-handler="OnGetAsync" asp-route-pageNumber="@(CurrentPage + 1)"
+                       asp-route-pageSize="@PageSize">Next</a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>

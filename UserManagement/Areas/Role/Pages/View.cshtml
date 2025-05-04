@@ -1,0 +1,49 @@
+﻿@page
+@using UserManagmentRazor.Helpers.DTo.LookUps
+@using UserManagmentRazor.Helpers.Enums
+@model UserManagmentRazor.Areas.Role.Pages.ViewModel
+
+@{
+    ViewData["Title"] = "View Role";
+    var actions = ViewData["AllowedActions"] as List<Actions>;
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<div class="container mt-4">
+    <h1>Role Details</h1>
+
+    @if (Model.Response.data == null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error!</strong> Role not found.
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5>@Model.Response.data.Name</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    This role is responsible for managing user permissions and access within the system.
+                </p>
+
+                <hr />
+
+                <h6>Role Details:</h6>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item">Name: @Model.Response.data.Name</li>
+                    <!-- Add more details if available -->
+                </ul>
+
+                <a style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Update) == true ? "inline" : "none");" asp-page="./Create" asp-route-id="@Model.Response.data.Id" class="btn btn-warning">Edit</a>
+                <a class="btn btn-secondary" asp-area="Role" asp-page="/RoleList">Back to List</a>
+            </div>
+        </div>
+    }
+</div>
+

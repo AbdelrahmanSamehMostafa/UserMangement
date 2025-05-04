@@ -1,0 +1,31 @@
+@{
+    // Render Success Message
+    if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success mt-3" id="SuccessMessage">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    // Render Error Message
+    if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger mt-3" id="ErrorMessage">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+}
+
+<script>
+    setTimeout(() => {
+        const successMessageElement = document.getElementById("SuccessMessage");
+        if (successMessageElement) {
+            successMessageElement.style.display = "none";
+        }
+
+        const errorMessageElement = document.getElementById("ErrorMessage");
+        if (errorMessageElement) {
+            errorMessageElement.style.display = "none";
+        }
+    }, 5000); // Adjust duration as needed
+</script>

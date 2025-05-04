@@ -1,0 +1,72 @@
+@page
+@model com.gbg.modules.utility.Areas.Profile.Pages.UserProfileModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<div class="container mt-4">
+    <h1>My Profile</h1>
+
+    @if (Model.UserProfile == null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error!</strong> Profile not found.
+        </div>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>@Model.UserProfile.firstName @Model.UserProfile.lastName</h5>
+            </div>
+            <div class="card-body text-center">
+
+                @await Html.PartialAsync("_UserImage", Model.UserProfile.Image)
+
+                <h6>Profile Details:</h6>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item">Full Name: @Model.UserProfile.firstName @Model.UserProfile.lastName</li>
+                    <li class="list-group-item">Username: @Model.UserProfile.username</li>
+                    <li class="list-group-item">Email: @Model.UserProfile.email</li>
+                </ul>
+
+                <h6>Groups Assigned:</h6>
+                <ul class="list-group mb-3">
+                    @if (Model.UserProfile.groups == null || Model.UserProfile.groups.Count == 0)
+                    {
+                        <li class="list-group-item">No Groups Found</li>
+                    }
+                    else
+                    {
+                        @foreach (var group in Model.UserProfile.groups)
+                        {
+                            <li class="list-group-item">@group.name</li>
+                        }
+                    }
+                </ul>
+
+                <!-- Upload Image Section -->
+                <h6>Update Profile Picture:</h6>
+                <form method="post" enctype="multipart/form-data" asp-page-handler="UploadImage">
+                    <div class="input-group">
+                        <input type="file" name="file" class="form-control" accept="image/*" required />
+                        <input type="hidden" name="EntityId" value="@Model.UserProfile.Id" />
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a asp-page="/ChangePassword" class="btn btn-primary">Change Password</a>
+                    <form method="post" asp-page-handler="Logout">
+                        <button type="submit" class="btn btn-danger">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

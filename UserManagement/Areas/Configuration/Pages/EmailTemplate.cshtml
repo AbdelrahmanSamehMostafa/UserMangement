@@ -1,0 +1,77 @@
+﻿@page
+@model UserManagmentRazor.Areas.Configuration.Pages.EmailTemplateModel
+@{
+    ViewData["Title"] = "Email Template";
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<h2>Email Template</h2>
+
+<!-- First form for selecting a template (GET request) -->
+<form method="get" class="form-horizontal">
+
+    <!-- Dropdown for selecting email template keys -->
+    <div class="form-group">
+        <label for="emailTemplateSelector">Select Existing Email Template:</label>
+        <select class="form-control" asp-for="SelectedTemplateKey" asp-items="Model.EmailTemplateKeys"
+            id="emailTemplateSelector" onchange="this.form.submit()">
+            <option value="">Select a template...</option>
+            <hr />
+            <option class="text-success" value="new-template">Create New Template</option>
+            <hr />
+        </select>
+    </div>
+
+</form>
+<br />
+<!-- Second form for updating or saving the selected template (POST request) -->
+<form method="post" class="form-horizontal">
+
+    <!-- Input field for creating new template key, hidden by default -->
+    <div class="form-group" id="newTemplateKeyField" style="display: none;">
+        <label for="newTemplateKey">Enter New Template Key:</label>
+        <input type="text" class="form-control" asp-for="NewTemplateKey" placeholder="Enter new template key here..." />
+    </div>
+    <br />
+    <!-- Textarea for showing and editing the selected email template body -->
+    <div class="form-group">
+        <label for="templateBody">Email Template Body:</label>
+        <textarea class="form-control" asp-for="SelectedTemplateBody" rows="10"
+            placeholder="Enter email template body here..."></textarea>
+    </div>
+    <br />
+    <!-- Save button for submitting the updated or new template -->
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+
+</form>
+
+<!-- JavaScript for showing/hiding the new template input field -->
+<script type="text/javascript">
+    function toggleNewTemplateInput(selectElement) {
+        const newTemplateKeyField = document.getElementById('newTemplateKeyField');
+
+        if (selectElement.value === 'new-template') {
+            // Show the new template key input field when "Create New Template" is selected
+            newTemplateKeyField.style.display = 'block';
+        } else {
+            // Hide the new template key input field for other selections
+            newTemplateKeyField.style.display = 'none';
+        }
+    }
+
+    // Ensure the form doesn't auto-submit when selecting "Create New Template"
+    document.getElementById('emailTemplateSelector').addEventListener('change', function (e) {
+        if (this.value === 'new-template') {
+            toggleNewTemplateInput(this);
+        }
+    });
+
+    // Trigger the initial state of the new template input field on page load
+    window.onload = function () {
+        const selectedKey = document.getElementById('emailTemplateSelector').value;
+        toggleNewTemplateInput({ value: selectedKey });
+    };
+</script>

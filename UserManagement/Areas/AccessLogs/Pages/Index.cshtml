@@ -1,0 +1,113 @@
+﻿@page
+@using UserManagmentRazor.Helpers
+@using UserManagmentRazor.Helpers.DTo.LookUps
+@using UserManagmentRazor.Helpers.Enums
+@model UserManagmentRazor.Areas.Logs.Pages.IndexModel
+@{
+    ViewData["Title"] = "Access Logs";
+    var actions = ViewData["AllowedActions"] as List<Actions>;
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<h1>Access Logs</h1>
+<form method="get" class="row g-3 needs-validation" onsubmit="return validateDates()" novalidate>
+    <!-- Date From -->
+    <div class="col-md-6">
+        <label for="DateFrom" class="form-label">Date From</label>
+        <input type="date" class="form-control" id="DateFrom" name="DateFrom"
+            value='@(Model.DateFrom == default(DateTime) ? DateTime.Now.AddDays(-7).Date.ToString() : Model.DateFrom.ToString())'
+            max="@DateTime.Today.ToString()">
+        <div class="invalid-feedback">Please select a valid date.</div>
+    </div>
+
+    <!-- Date To -->
+    <div class="col-md-6">
+        <label for="DateTo" class="form-label">Date To</label>
+        <input type="date" class="form-control" id="DateTo" name="DateTo"
+               value="@(Model.DateTo == default(DateTime)?  DateTime.Today.ToString() : Model.DateTo.ToString())"
+            max="@DateTime.Today.ToString()">
+        <div class="invalid-feedback">"Date To" must be after "Date From".</div>
+    </div>
+
+    <!-- Submit and Export Buttons -->
+    <div class="col-md-12 d-flex mb-2">
+        <button class="btn btn-primary me-1" type="submit">
+            <i class="bi bi-search"></i> Search
+        </button>
+
+        <a asp-page-handler="Export" asp-route-DateFrom="@Model.DateFrom.ToString("MM-dd-yyyy")"
+           style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Export) == true ? "inline" : "none");"
+            asp-route-DateTo="@Model.DateTo.ToString("MM-dd-yyyy")" class="btn btn-success" onclick="return validateDates()">
+            
+            Export to Excel
+        </a>
+        
+    </div>
+</form>
+
+
+@if (Model.AccessLog.accessLogs != null && Model.AccessLog.accessLogs.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Access Type</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>User Full Name</th>
+                    <th>Email Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model.AccessLog.accessLogs)
+                {
+                    <tr>
+                        <td>@log.AccessType</td>
+                        <td>@log.Date</td>
+                        <td>@DateTime.Parse(log.Time).ToString("HH:mm")</td>
+                        <td>@log.Status</td>
+                        <td>@log.UserFullName</td>
+                        <td>@log.EmailAddress</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @Html.Paginate(Model.AccessLog)
+}
+else
+{
+    <div class="alert alert-warning text-center">
+        No logs found for the selected period.
+    </div>
+}
+
+
+@section scripts {
+    <script>
+        function validateDates() {
+            const dateFrom = new Date(document.getElementById('DateFrom').value);
+            const dateTo = new Date(document.getElementById('DateTo').value);
+            const today = new Date();
+
+            // Ensure DateFrom is less than DateTo
+            if (dateTo < dateFrom) {
+                alert('"Date To" cannot be earlier than "Date From".');
+                return false;
+            }
+
+            // Ensure both dates are not in the future
+            if (dateFrom > today || dateTo > today) {
+                alert('Dates cannot be in the future.');
+                return false;
+            }
+
+            return true; // Proceed with form submission if validation passes
+        }
+    </script>
+}

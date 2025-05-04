@@ -1,0 +1,90 @@
+@page
+@model com.gbg.modules.utility.Areas.Configuration.Pages.MailConfigurationModel
+@{
+    ViewData["Title"] = "Mail Configuration";
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<h2>Mail Configuration</h2>
+
+<form method="post">
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Configuration Key</th>
+                    <th>Configuration Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Configurations.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            @Html.Raw(CapitalizeFirstLetter(Model.Configurations[i].ConfigKey.Replace("smtp.", "")))
+                            <input type="hidden" name="Configurations[@i].ConfigKey"
+                                value="@Model.Configurations[i].ConfigKey" />
+                        </td>
+                        <td>
+                            @if (Model.Configurations[i].ConfigKey == "smtp.isssl")
+                            {
+                                <input type="checkbox" name="Configurations[@i].ConfigValue" value="true"
+                                    class="form-check-input" @(Model.Configurations[i].ConfigValue.ToLower() == "true" ?
+                            "checked" : "") />
+                                <input type="hidden" name="Configurations[@i].ConfigValue" value="false" />
+                            }
+                            else if (Model.Configurations[i].ConfigKey == "smtp.password")
+                            {
+                                <div class="input-group">
+                                    <input type="password" id="passwordInput_@i" name="Configurations[@i].ConfigValue"
+                                        value="@Model.Configurations[i].ConfigValue" class="form-control" />
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePasswordVisibility('@i')">
+                                        Show
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="text" name="Configurations[@i].ConfigValue"
+                                    value="@Model.Configurations[i].ConfigValue" class="form-control" />
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Configurations</button>
+</form>
+
+@functions {
+    private string CapitalizeFirstLetter(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        // Capitalize the first letter and keep the rest of the string unchanged
+        return char.ToUpper(input[0]) + input.Substring(1);
+    }
+}
+
+@section Scripts {
+    <script>
+        function togglePasswordVisibility(index) {
+            var passwordInput = document.getElementById('passwordInput_' + index);
+            var button = event.currentTarget;
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                button.innerText = 'Hide';
+            } else {
+                passwordInput.type = 'password';
+                button.innerText = 'Show';
+            }
+        }
+    </script>
+}

@@ -1,0 +1,55 @@
+@page
+@model com.gbg.modules.utility.Areas.Authentication.Pages.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+@await Html.PartialAsync("_MessageAlert")
+
+<h1>Login</h1>
+
+<form method="post" class="login-form">
+    <div class="form-group mb-3">
+        <label asp-for="@Model.Input.emailAddress" class="control-label">Email Address <span
+                class="text-danger">*</span></label>
+        <input asp-for="@Model.Input.emailAddress" class="form-control" placeholder="Enter your email.." required />
+        <span asp-validation-for="Input.emailAddress" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="@Model.Input.password" class="control-label">Password <span class="text-danger">*</span></label>
+        <div class="d-flex align-items-center"> <!-- Flex container for input and button -->
+            <input asp-for="@Model.Input.password" type="password" id="passwordInput" class="form-control me-2"
+                placeholder="Enter your password.." required />
+            <button type="button" class="btn btn-outline-secondary" id="password-button"
+                onclick="togglePasswordVisibility()">
+                Show
+            </button>
+        </div>
+        <span asp-validation-for="Input.password" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center">
+        <div style="flex-grow: 1;"></div>
+        <a href="ForgetPassword" class="forgot-password">Forgot Password?</a>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block" id="login-button">Login</button>
+</form>
+
+
+
+<script>
+    function togglePasswordVisibility() {
+        var passwordInput = document.getElementById('passwordInput');
+        var button = event.currentTarget;
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            button.innerText = 'Hide';
+        } else {
+            passwordInput.type = 'password';
+            button.innerText = 'Show';
+        }
+    }
+</script>

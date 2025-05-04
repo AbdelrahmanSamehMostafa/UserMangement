@@ -1,0 +1,33 @@
+﻿@model List<UserManagmentRazor.Helpers.DTo.Breadcrumb.BreadcrumbItem>
+<style>
+    .breadcrumb {
+        background-color: #f8f9fa;
+    }
+
+    .breadcrumb-item a {
+        color: #007bff;
+        padding: 10px;
+    }
+
+    .breadcrumb-item.active {
+        color: #6c757d;
+    }
+
+</style>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        @foreach (var item in Model)
+        {
+            if (item.IsActive)
+            {
+                <li class="breadcrumb-item active" aria-current="page">@item.Title</li>
+            }
+            else
+            {
+                <li class="breadcrumb-item">
+                    <a href="@item.Url">@item.Title</a>
+                </li>
+            }
+        }
+    </ol>
+</nav>

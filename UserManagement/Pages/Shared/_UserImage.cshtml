@@ -1,0 +1,25 @@
+@model byte[]
+
+@functions {
+    public string ConvertImageToBase64(byte[] imageBytes)
+    {
+        if (imageBytes == null || imageBytes.Length == 0)
+        {
+            return null;
+        }
+        return $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+    }
+}
+
+<div class="mb-3">
+    @if (Model != null && Model.Length > 0)
+    {
+        <img src="@ConvertImageToBase64(Model)" alt="User Image" class="img-fluid rounded-circle"
+            style="max-width: 100px; max-height: 100px;" />
+    }
+    else
+    {
+        <img src="~/uploads/default_image.jpg" alt="Default User Image" class="img-fluid rounded-circle"
+            style="max-width: 100px; max-height: 100px;" />
+    }
+</div>

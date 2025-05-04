@@ -1,0 +1,39 @@
+﻿@page
+@model IndexModel
+@using UserManagmentRazor.Helpers.DTo.PermissionsDto
+@using Newtonsoft.Json
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "Configurations";
+    // Retrieve allowed screens from session
+    var allowedScreensJson = HttpContextAccessor.HttpContext.Session.GetString("AllowedScreens");
+    var allowedScreens = string.IsNullOrEmpty(allowedScreensJson)
+        ? new List<ScreenMenuResponseDto>()
+        : JsonConvert.DeserializeObject<List<ScreenMenuResponseDto>>(allowedScreensJson);
+
+    var allowedMainScreens = allowedScreens.Where(s => s.ParentId == null || s.ParentId == Guid.Empty).ToList();
+    var allowedSubScreens = allowedScreens.Where(s => s.ParentId != null && s.ParentId != Guid.Empty).ToList();
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+
+<h1>All System Configuration</h1>
+
+@await Html.PartialAsync("_MessageAlert")
+
+<ul>
+    @foreach (var screen in allowedMainScreens)
+    {
+        if (screen.ScreenName.ToLower() == "configuration")
+        {
+            foreach (var subScreen in allowedSubScreens)
+            {
+                if (subScreen.ParentId == screen.ScreenId)
+                {
+                    <li><a asp-page="/@subScreen.AreaName.Split('/')[2]">@subScreen.ScreenName</a></li>
+                }
+            }
+        }
+    }
+</ul>
