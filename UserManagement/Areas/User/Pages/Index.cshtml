@@ -1,0 +1,160 @@
+@page
+@using UserManagmentRazor.Extentions
+@using UserManagmentRazor.Helpers
+@using UserManagmentRazor.Helpers.DTo.LookUps
+@using UserManagmentRazor.Helpers.Enums;
+@model UserManagmentRazor.Areas.User.Pages.IndexModel
+
+@{
+    ViewData["Title"] = "User List";
+    var actions = ViewData["AllowedActions"] as List<Actions>;
+}
+
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<h1>User List</h1>
+
+<!-- Search Form with Lock Status Filter and Bootstrap Input Group -->
+<form method="get">
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <!-- Search Input Field -->
+            <input type="text" id="searchUserName" name="SearchUserName" class="form-control"
+                value="@Model.SearchUserName" placeholder="Search by user fullname or email...">
+        </div>
+
+        <div class="col-md-4">
+            <!-- Lock Status Dropdown -->
+            <select id="lockStatus" name="LockStatus" class="form-select">
+                <option value="all">All</option>
+                <option value="locked" selected="@(Model.LockStatus == LockStatus.locked ? "selected" : null)">Locked
+                </option>
+                <option value="unlocked" selected="@(Model.LockStatus == LockStatus.unlocked ? "selected" : null)">
+                    Unlocked</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Search Button -->
+            <button class="btn btn-primary" type="submit">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </div>
+    </div>
+</form>
+
+<div class="d-flex gap-4">
+
+    <!-- Create New User Button -->
+    <a asp-page="Create" class="btn btn-primary" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Create) == true ? "inline" : "none");">Create New User</a>
+
+    @if (actions?.Any(a => a.ActionType == ActionType.Export) == true)
+    {
+        @await Html.PartialAsync("_ExportToExcel", Model.usersList.users)
+    }
+    @if (actions?.Any(a => a.ActionType == ActionType.Import) == true)
+    {
+    @await Html.PartialAsync("_DownloadTemplate", "~/uploads/ImportUsersTemplateFile.xlsx")
+    }
+
+    @if (TempData["DownloadMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["DownloadMessage"]
+            <a asp-page="Index" asp-route-handler="DownloadExportedFile" class="btn btn-link">Download Exported File</a>
+        </div>
+    }
+
+    else if (TempData["DownloadError"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["DownloadError"]
+        </div>
+    }
+</div>
+
+@if (Model.usersList.users.Count == 0)
+{
+    <p class="mt-4">No users found.</p>
+}
+else
+{
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>User Image</th>
+                <th>User Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.usersList.users)
+            {
+                <tr id="user-@user.Id">
+                    <td>
+                        @await Html.PartialAsync("_UserImage", user.Image)
+                    </td>
+                    <td>@user.FirstName @user.LastName</td>
+                    <td>
+
+                        <a asp-page="Create" asp-route-id="@user.Id" class="btn btn-warning" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Update) == true ? "inline" : "none");">Edit</a>
+
+
+                        <a asp-page="View" asp-route-id="@user.Id" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.View) == true ? "inline" : "none");" class="btn btn-info">View</a>
+
+                            <!-- Delete User -->
+                        <form method="post" asp-page-handler="Delete" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Delete) == true ? "inline" : "none");">
+                            <input type="hidden" name="userId" value="@user.Id" />
+                            <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('Are you sure you want to delete this user?');">
+                                Delete
+                            </button>
+                        </form>
+                        
+
+                        <!-- Reset Password -->
+                        <form method="post" asp-route-ScreenId="@ViewData["ScreenId"]" asp-page-handler="Reset" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Reset) == true ? "inline" : "none");">
+                                <input type="hidden" name="userEmail" value="@user.Email" />
+                                <button type="submit" class="btn btn-dark"
+                                    onclick="return confirm('This user password will be reset.');">
+                                    Reset Password
+                                </button>
+                        </form>
+
+                        <!-- Lock/Unlock User -->
+                        <form method="post" asp-route-ScreenId="@ViewData["ScreenId"]" asp-page-handler="@((user.IsLocked) ? "Unlock" : "Lock")" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Lock ||a.ActionType == ActionType.Unlock) == true ? "inline" : "none");">
+                            <input type="hidden" name="Id" value="@user.Id" />
+                            <button type="submit" class="btn @(user.IsLocked ? "btn-success" : "btn-secondary")"
+                                onclick="return confirm('Are you sure you want to @(user.IsLocked? "unlock" : "lock") this user?');">
+                                @(user.IsLocked? "Unlock" : "Lock")
+                            </button>
+                        </form>
+                        
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    @Html.Paginate(Model.usersList)
+}
+
+<style>
+    /* Custom styles for the details modal */
+    .custom-details-modal {
+        max-width: 60%;
+        /* Adjust the width as needed */
+    }
+
+    .modal-body {
+        max-height: 70vh;
+        /* Set the maximum height */
+        overflow-y: auto;
+        /* Enable vertical scrolling if the content exceeds the height */
+    }
+</style>

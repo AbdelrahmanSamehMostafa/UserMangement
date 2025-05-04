@@ -1,0 +1,56 @@
+﻿@using UserManagmentRazor.Helpers.DTo.PermissionsDto
+@using Newtonsoft.Json
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    // Retrieve allowed screens from session
+    var allowedScreensJson = HttpContextAccessor.HttpContext.Session.GetString("AllowedScreens");
+    var allowedScreens = string.IsNullOrEmpty(allowedScreensJson)
+        ? new List<ScreenMenuResponseDto>()
+        : JsonConvert.DeserializeObject<List<ScreenMenuResponseDto>>(allowedScreensJson);
+
+    var allowedMainScreens = allowedScreens.Where(s => (s.ParentId == null || s.ParentId == Guid.Empty) && s.IsMenuScreen).ToList();
+    var allowedSubScreens = allowedScreens.Where(s => (s.ParentId != null && s.ParentId != Guid.Empty) && s.IsMenuScreen).ToList();
+}
+
+<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <div class="container">
+        <a class="navbar-brand" asp-area="" asp-page="/Index">UserManagmentRazor</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between" id="navbarNavDropdown">
+            <ul class="navbar-nav flex-grow-1">
+                @if (allowedMainScreens != null)
+                {
+                    foreach (var screen in allowedMainScreens)
+                    {
+                        var childScreens = allowedSubScreens?.Where(s => s.ParentId == screen.ScreenId).ToList();
+
+                        if (childScreens != null && childScreens.Any())
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false" href="#">
+                                    @screen.ScreenName
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    @foreach (var subScreen in childScreens)
+                                    {
+                                        <li><a class="dropdown-item" href="@subScreen.AreaName">@subScreen.ScreenName</a></li>
+                                    }
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="@screen.AreaName">@screen.ScreenName</a>
+                            </li>
+                        }
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+</nav>

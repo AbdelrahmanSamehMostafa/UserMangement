@@ -1,0 +1,138 @@
+/* Login.css */
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+  line-height: 1.5;
+  min-height: 100vh;
+  background: #f3f3f3;
+  margin: 0;
+}
+/* Adjustments for input and button in the same row */
+.form-group input {
+  flex-grow: 1; /* Allow input to take available space */
+  margin-right: 10px; /* Space between input and button */
+}
+
+#passwordInput {
+  flex: 1; /* Make input field flexible */
+  min-width: 0; /* Prevent input from growing too large */
+}
+
+#password-button {
+  /* Keep existing styles */
+  background-color: transparent; /* No background color */
+  color: #007bff; /* Primary color */
+  border: 1px solid #007bff; /* Primary border */
+  padding: 8px 12px; /* Padding for size */
+  border-radius: 4px; /* Slightly rounded corners */
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effects */
+  font-size: 14px; /* Font size */
+  height: 100%; /* Ensure button height matches input */
+}
+.container {
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  padding: 20px; /* Increased padding for a better layout */
+  width: 500px; /* Fixed width for the container */
+  text-align: center;
+}
+
+h2 {
+  color: #4caf50; /* Changed heading color */
+  margin-bottom: 20px; /* Spacing below the heading */
+}
+
+label {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  text-align: left;
+  color: #555;
+  font-weight: bold;
+}
+
+input {
+  display: block;
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px; /* Added font size for inputs */
+}
+
+#login-button {
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  background-color: #1100ff;
+  width: 100%;
+  font-size: 16px;
+}
+
+#password-button {
+  background-color: transparent; /* No background color */
+  color: #007bff; /* Primary color */
+  border: 1px solid #007bff; /* Primary border */
+  padding: 8px 12px; /* Padding for size */
+  border-radius: 4px; /* Slightly rounded corners */
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effects */
+  font-size: 14px; /* Font size */
+}
+
+.forgot-password {
+  color: #1100ff; /* Match forgot password link color */
+  text-decoration: none; /* Remove underline */
+}
+
+.forgot-password:hover {
+  text-decoration: underline; /* Add underline on hover */
+}
+
+.d-flex {
+  display: flex;
+  justify-content: space-between; /* Align items in a row and space them out */
+  width: 100%; /* Take full width of the container */
+}
+
+/* Error Message Styles */
+.alert {
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px; /* Space below the alert */
+  display: flex; /* Flexbox for alignment */
+  align-items: center; /* Center content vertically */
+  color: #721c24; /* Text color */
+  background-color: #f8d7da; /* Background color */
+  border: 1px solid #f5c6cb; /* Border color */
+}
+
+.alert.alert-danger {
+  color: #a71c1c; /* Darker text color for danger alerts */
+  background-color: #f2dede; /* Light red background */
+  border-color: #ebccd1; /* Light red border */
+}
+
+.alert #ErrorMessage {
+  margin: 0; /* Reset margin for inner content */
+  flex-grow: 1; /* Allow the message to take available space */
+}
+
+/* Optional close button for alerts */
+.alert .close {
+  margin-left: 15px;
+  cursor: pointer;
+  font-size: 20px; /* Size for close button */
+  color: #a71c1c; /* Color for close button */
+}
+

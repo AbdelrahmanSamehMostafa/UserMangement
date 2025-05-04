@@ -1,0 +1,262 @@
+@page "{id?}"
+@using UserManagmentRazor.Helpers.DTo.LookUps
+@using UserManagmentRazor.Helpers.Enums
+@model UserManagmentRazor.Areas.User.Pages.CreateModel
+
+@{
+    ViewData["Title"] = Model.IsEditMode ? "Edit User" : "Create User";
+    var actions = ViewData["AllowedActions"] as List<Actions>;
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="post">
+    <input asp-for="@Model.User.Id" type="hidden" />
+
+    <div>
+        <div class="form-group mb-3">
+            <label asp-for="@Model.User.FirstName" class="control-label">First Name <span
+                    class="text-danger">*</span></label>
+            <input asp-for="@Model.User.FirstName" class="form-control" required />
+            <span asp-validation-for="User.FirstName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="@Model.User.LastName" class="control-label">Last Name <span
+                    class="text-danger">*</span></label>
+            <input asp-for="@Model.User.LastName" class="form-control" required />
+            <span asp-validation-for="User.LastName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="@Model.User.Email" class="control-label">Email Address <span
+                    class="text-danger">*</span></label>
+            <input asp-for="@Model.User.Email" class="form-control" required />
+            <span asp-validation-for="User.Email" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="@Model.User.MobileNumber" class="control-label">Mobile Number (Optional)</label>
+            <input asp-for="@Model.User.MobileNumber" class="form-control" placeholder="e.g., 1234567890" />
+            <span asp-validation-for="User.MobileNumber" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="@Model.User.DateOfBirth" class="control-label">Date of Birth <span
+                    class="text-danger">*</span></label>
+            <input asp-for="@Model.User.DateOfBirth" type="date" class="form-control"
+                value="@DateTime.Now.ToString("yyyy-MM-dd")" max="@DateTime.Now.AddYears(80).ToString("yyyy-MM-dd")"
+                required />
+            <span asp-validation-for="User.DateOfBirth" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="@Model.User.Location" class="control-label">Address Location <span
+                    class="text-danger">*</span> (Accepts Spaces)</label>
+            <input asp-for="@Model.User.Location" class="form-control" required />
+            <span asp-validation-for="User.Location" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="groupDropdown">Groups (At least one must be checked)</label>
+
+            <input type="hidden" id="previouslySelectedGroups" value="@string.Join(",", Model.User.GroupIds)" />
+
+            <div id="selectedGroupsContainer" class="mb-3">
+                <strong>Selected Groups:</strong>
+                <ul id="selectedGroupsList" class="list-group mb-3">
+                    @foreach (var group in Model.User.groups)
+                    {
+                        <li class="list-group-item">@group.Name</li>
+                    }
+                </ul>
+            </div>
+
+            <div class="dropdown mx-8">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="groupDropdown"
+                    data-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                    Select Groups
+                </button>
+                <div class="dropdown-menu mb-3 px-3 pb-2" aria-labelledby="groupDropdown" id="groupsDropdown">
+                    <div class="input-group">
+                        <input type="text" class="form-control mx-2" id="searchGroups" placeholder="Search Groups...">
+                        <button class="btn btn-outline-primary" id="searchButton">Search</button>
+                    </div>
+                    <div id="groupItemsContainer">
+                        @foreach (var group in Model.Groups) // Initial rendering, will be updated by JS
+                        {
+                            <div class="form-check dropdown-item group-item mx-8" data-group-name="@group.Name">
+                                <input type="checkbox" class="form-check-input" value="@group.Id" name="SelectedGroupIds"
+                                    id="group_@group.Id" @if (Model.User.GroupIds.Contains(group.Id))
+                                {
+                                    <text>checked</text>
+                                } />
+                                <label class="form-check-label" for="group_@group.Id">@group.Name</label>
+                            </div>
+                        }
+                    </div>
+                    <div class="d-none" id="allGroups" data-all-groups='@Html.Raw(Json.Serialize(Model.Groups))'></div>
+                </div>
+            </div>
+            <span asp-validation-for="User.GroupIds" class="text-danger"></span>
+        </div>
+
+        <button style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Create || a.ActionType == ActionType.Update) == true ? "inline" : "none");" type="submit" class="btn btn-primary">@Model.ButtonText</button>
+        <a asp-page="/Index" class="btn btn-secondary">Back to List</a>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Function to filter the groups based on the search input
+            function filterGroups() {
+                var input = document.getElementById("searchGroups");
+                var filter = input.value.toLowerCase();
+                var allGroups = JSON.parse($('#allGroups').attr('data-all-groups')); // Get all groups
+
+                // Get the currently checked groups
+                var checkedGroups = new Set();
+                $('.dropdown-item input[type="checkbox"]:checked').each(function () {
+                    checkedGroups.add($(this).val());
+                });
+
+                // Clear the previous items in the dropdown
+                $('#groupItemsContainer').empty();
+
+                // First, display the checked groups
+                allGroups.forEach(function (group) {
+                    if (checkedGroups.has(group.Id)) {
+                        var groupItem = $('<div class="form-check dropdown-item group-item mx-8" data-group-name="' + group.name + '"></div>');
+                        groupItem.append('<input type="checkbox" class="form-check-input" value="' + group.Id + '" name="User.Groups" id="group_' + group.Id + '" checked disabled/>');
+                        groupItem.append('<label class="form-check-label" for="group_' + group.Id + '">' + group.name + '</label>');
+                        $('#groupItemsContainer').append(groupItem);
+                    }
+                });
+
+                // Iterate through all groups and filter based on input
+                for (var i = 0; i < allGroups.length; i++) {
+                    var groupName = allGroups[i].name.toLowerCase(); // Ensure case insensitivity
+
+                    // Check if the group name contains the search input
+                    if (groupName.includes(filter)) {
+                        // Create new group item element
+                        var groupItem = $('<div class="form-check dropdown-item group-item mx-8" data-group-name="' + allGroups[i].name + '"></div>');
+                        var isChecked = checkedGroups.has(allGroups[i].Id) ? 'checked' : ''; // Check if this group was previously selected
+
+                        groupItem.append('<input type="checkbox" class="form-check-input" value="' + allGroups[i].Id + '" name="User.Groups" id="group_' + allGroups[i].Id + '" ' + isChecked + '/>');
+                        groupItem.append('<label class="form-check-label" for="group_' + allGroups[i].Id + '">' + allGroups[i].name + '</label>');
+
+                        // Append the new group item to the container
+                        $('#groupItemsContainer').append(groupItem);
+                    }
+                }
+
+                // Optionally limit to the first 10 items after filtering
+                var displayedItems = $('#groupItemsContainer .group-item');
+                displayedItems.slice(10).hide(); // Hide any items beyond the first 10
+                displayedItems.slice(0, 10).show(); // Show only the first 10 items
+
+                // Re-bind the change event for the checkboxes since they are recreated
+                $('#groupItemsContainer input[type="checkbox"]').change(function () {
+                    updateSelectedGroupsDisplay();
+                });
+            }
+
+            // Function to handle the search button click
+            $('#searchButton').click(function (event) {
+                event.preventDefault(); // Prevent the default form submission behavior
+                event.stopPropagation(); // Prevent the dropdown from closing
+                filterGroups(); // Call the filter function
+            });
+
+            // Prevent dropdown from closing when clicking on items
+            $('.dropdown-item').click(function (event) {
+                event.stopPropagation(); // Prevent event from bubbling up
+            });
+
+            // Function to update the display of selected groups
+            function updateSelectedGroupsDisplay() {
+                var checkedItems = $('.dropdown-item input[type="checkbox"]:checked');
+                var selectedGroupsList = $('#selectedGroupsList');
+                var previouslySelectedGroups = $('#previouslySelectedGroups');
+
+                // Create a set to store the current selected group IDs
+                var selectedGroupIds = new Set(previouslySelectedGroups.val().split(','));
+
+                // Loop through each checked item to manage the selected groups display
+                checkedItems.each(function () {
+                    var groupId = $(this).val();
+                    var groupName = $(this).closest('.dropdown-item').data('group-name');
+
+                    // Add the group ID to the set if it's checked
+                    if (!selectedGroupIds.has(groupId)) {
+                        selectedGroupIds.add(groupId);
+                        // Append the group name as a list item
+                        selectedGroupsList.append('<li class="list-group-item">' + groupName + '</li>');
+                    }
+                });
+
+                // Loop through the unchecked items to remove them from the display
+                $('.dropdown-item input[type="checkbox"]:not(:checked)').each(function () {
+                    var groupId = $(this).val();
+                    var groupName = $(this).closest('.dropdown-item').data('group-name');
+
+                    // If the group ID is in the set, remove it from the set and the display
+                    if (selectedGroupIds.has(groupId)) {
+                        selectedGroupIds.delete(groupId);
+                        // Remove the group name from the selected groups list
+                        selectedGroupsList.find('li').filter(function () {
+                            return $(this).text() === groupName; // Check based on group name
+                        }).remove();
+                    }
+                });
+
+                // Update the hidden field with the combined set of selected group IDs
+                previouslySelectedGroups.val(Array.from(selectedGroupIds).join(','));
+            }
+
+            // Attach change event listeners to checkboxes
+            $('.dropdown-item input[type="checkbox"]').on('change', updateSelectedGroupsDisplay);
+
+
+            // Initial event binding for checkboxes on page load
+            $('#groupItemsContainer input[type="checkbox"]').change(function () {
+                updateSelectedGroupsDisplay();
+            });
+
+            // Close dropdown when clicking outside
+            $(document).click(function (event) {
+                if (!$(event.target).closest('.dropdown').length) {
+                    $('.dropdown-menu').removeClass('show');
+                }
+            });
+        });
+    </script>
+
+}
+
+
+<style>
+    .dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+        width: 450px;
+    }
+
+    #groupDropdown {
+        width: 150px;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .form-check-input {
+        margin-right: 0.5rem;
+    }
+</style>

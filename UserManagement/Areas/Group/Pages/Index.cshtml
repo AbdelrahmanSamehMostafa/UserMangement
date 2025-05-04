@@ -1,0 +1,107 @@
+﻿@page
+@using UserManagmentRazor.Helpers.DTo.LookUps
+@using UserManagmentRazor.Helpers.Enums
+@model UserManagmentRazor.Areas.Group.Pages.IndexModel
+@{
+    ViewData["Title"] = "Group List";
+    Layout = "_Layout";
+    var actions = ViewData["AllowedActions"] as List<Actions>;
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<h1>Group List</h1>
+
+<!-- Search Form with Bootstrap Input Group -->
+<form method="get">
+    <div class="input-group mb-4">
+        <!-- Search Input Field -->
+        <input type="text" id="searchGroupName" name="searchGroupName" class="form-control" asp-for="SearchGroupName"
+            placeholder="Search by group name..." list="groupNames">
+
+        <!-- Search Button -->
+        <button class="btn btn-primary" type="submit">
+            <i class="bi bi-search"></i> Search
+        </button>
+    </div>
+</form>
+
+<div class="d-flex gap-2">
+
+    <!-- Create New Group Button -->
+    <a asp-page="Create" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Create) == true ? "inline" : "none");" class="btn btn-primary">Create New Group</a>
+
+    @if (actions?.Any(a => a.ActionType == ActionType.Export) == true)
+    {
+        @await Html.PartialAsync("_ExportToExcel", Model.Groups.Groups)
+    }
+</div>
+
+
+<!-- Group List Table -->
+@if (Model.Groups.Groups == null)
+{
+    <p>No Groups found.</p>
+}
+else
+{
+    <!-- Autocomplete Suggestions using Datalist -->
+    <datalist id="groupNames">
+        @foreach (var group in Model.Groups.Groups)
+        {
+            <option value="@group.Name"></option>
+        }
+    </datalist>
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>Group Name</th>
+                <th>Users Count</th>
+                <th>Roles Count</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var group in Model.Groups.Groups)
+            {
+                <tr>
+                    <td>@group.Name</td>
+                    <td>@group.CountOfUsers</td>
+                    <td>@group.CountOfRoles</td>
+                    <td>
+
+                        <a asp-page="./Create" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Update) == true ? "inline" : "none");" asp-route-id="@group.Id" class="btn btn-dark">Edit</a>
+
+
+                        <a asp-page="./View" asp-route-id="@group.Id" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.View) == true ? "inline" : "none");" class="btn btn-warning">View</a>
+
+
+                        <form id="deleteGroupForm-@group.Id" method="post" asp-page-handler="Delete" asp-route-id="@group.Id" style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Delete) == true ? "inline" : "none");"
+                                style="display:inline">
+                                <button type="button" class="btn btn-danger"
+                                    onclick="confirmDeleteForm('@group.Name', 'deleteGroupForm-@group.Id')">Delete</button>
+                        </form>
+                        
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    @Html.Paginate(Model.Groups)
+}
+
+@section Scripts {
+    <script>
+        function confirmDeleteForm(groupName, formId) {
+            const userConfirmed = confirm("Are you sure you want to delete this group (" + groupName + ")?");
+
+            if (userConfirmed) {
+                document.getElementById(formId).submit();
+            }
+        }
+    </script>
+}

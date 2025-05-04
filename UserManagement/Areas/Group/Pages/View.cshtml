@@ -1,0 +1,96 @@
+﻿@page
+@using UserManagmentRazor.Helpers.DTo.LookUps
+@using UserManagmentRazor.Helpers.Enums
+@model UserManagmentRazor.Areas.Group.Pages.ViewModel
+@{
+    ViewBag.Title = "Group View";
+    var actions = ViewData["AllowedActions"] as List<Actions>;
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+@await Html.PartialAsync("_MessageAlert")
+
+<div class="container mt-4">
+    <h1>Group Details</h1>
+
+    @if (Model.group == null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error!</strong> Group not found.
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5>@Model.group.Name</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Below are the details of the group.
+                </p>
+
+                <hr />
+
+                <h6>Group Details:</h6>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item">Name: @Model.group.Name</li>
+                    <li class="list-group-item">Code: @Model.group.Code</li>
+                    <li class="list-group-item">Description: @Model.group.Description</li>
+                </ul>
+
+                @{
+                    <h6>Roles Assigned:</h6>
+                    if (Model.group.roles.Count < 0)
+                    {
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item"> No roles Found</li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul class="list-group mb-3">
+                            @foreach (var role in Model.group.roles)
+                            {
+                                <li class="list-group-item">@role.Name</li>
+                            }
+                        </ul>
+                    }
+                }
+                @{
+                    <h6>Users Assigned:</h6>
+                    if (Model.group.users.Count < 0)
+                    {
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item"> No users found for this group</li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <table class="table table-striped mb-3">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var user in Model.group.users)
+                                {
+                                    <tr>
+                                        <td>@user.Name</td>
+                                        <td>@user.Email</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                }
+
+                <a style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Update) == true ? "inline" : "none");"  asp-page="./Create" asp-route-id="@Model.group.Id" class="btn btn-warning">Edit</a>
+                <a class="btn btn-secondary" asp-area="Group" asp-page="/Index">Back to List</a>
+            </div>
+        </div>
+    }
+</div>

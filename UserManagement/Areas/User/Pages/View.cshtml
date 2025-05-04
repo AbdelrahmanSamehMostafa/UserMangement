@@ -1,0 +1,76 @@
+@page
+@using UserManagmentRazor.Helpers.DTo.LookUps
+@using UserManagmentRazor.Helpers.Enums
+@model com.gbg.modules.utility.Areas.User.Pages.ViewModel
+@{
+    ViewData["Title"] = "View";
+    var actions = ViewData["AllowedActions"] as List<Actions>;
+}
+
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+@await Html.PartialAsync("_MessageAlert")
+
+<div class="container mt-4">
+    <h1 class="mb-4">User Details</h1>
+
+    @if (Model.user == null)
+    {
+        <div class="alert alert-danger">
+            <strong>Error!</strong> User not found.
+        </div>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>@Model.user.FirstName @Model.user.LastName</h5>
+            </div>
+            <div class="card-body text-center">
+                @await Html.PartialAsync("_UserImage", Model.user.Image)
+
+                <hr />
+
+                <h6>User Details:</h6>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item">Full Name: @Model.user.FirstName @Model.user.LastName</li>
+                    <li class="list-group-item">Username: @Model.user.UserName</li>
+                    <li class="list-group-item">Email: @Model.user.Email</li>
+                    <li class="list-group-item">Mobile Number: @(Model.user.MobileNumber ?? "N/A")</li>
+                    <li class="list-group-item">Date of Birth: @Model.user.DateOfBirth.ToShortDateString()</li>
+                    <li class="list-group-item">Address: @Model.user.Location</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6>Groups Assigned:</h6>
+            </div>
+            <div class="card-body">
+                @if (Model.user.Groups == null || Model.user.Groups.Count == 0)
+                {
+                    <p class="text-muted">No Groups Found</p>
+                }
+                else
+                {
+                    <ul class="list-group mb-3">
+                        @foreach (var group in Model.user.Groups)
+                        {
+                            <li class="list-group-item">@group.Name</li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+        <div class="d-flex justify-content-between">
+            <a style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Update) == true ? "inline" : "none");" asp-page="./Create" asp-route-id="@Model.user.Id" class="btn btn-warning">Edit</a>
+            <a class="btn btn-secondary" asp-area="User" asp-page="/Index">Back to List</a>
+            <form method="post" class="mt-3">
+                <input type="hidden" name="Email" value="@Model.user.Email" />
+                <button style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Reset) == true ? "inline" : "none");" type="submit" class="btn btn-danger">Reset Password</button>
+            </form>
+        </div>
+
+    }
+</div>

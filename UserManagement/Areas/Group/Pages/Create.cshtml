@@ -1,0 +1,241 @@
+﻿@page "{id?}"
+@using UserManagmentRazor.Helpers.DTo.LookUps
+@using UserManagmentRazor.Helpers.Enums
+@model UserManagmentRazor.Areas.Group.Pages.CreateModel
+@{
+    ViewBag.Title = @Model.Text + " Group";
+    var actions = ViewData["AllowedActions"] as List<Actions>;
+}
+<!-- Breadcrumb partial -->
+@await Html.PartialAsync("_Breadcrumb", Model.Breadcrumbs)
+
+
+<h2>@Model.Text Group</h2>
+
+@await Html.PartialAsync("_MessageAlert")
+
+<form method="post">
+    <input type="hidden" asp-for="Group.Id" />
+    <div class="form-group">
+        <label asp-for="Group.Name"></label>
+        <input asp-for="Group.Name" class="form-control" />
+        <span asp-validation-for="Group.Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Group.Code"></label>
+        <input asp-for="Group.Code" class="form-control" />
+        <span asp-validation-for="Group.Code" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Group.Description"></label>
+        <textarea asp-for="Group.Description" class="form-control"></textarea>
+        <span asp-validation-for="Group.Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="rolesDropdown">Roles (At least one must be checked)</label>
+        <input type="hidden" id="previouslySelectedRoles" value="@string.Join(",", Model.Group.RolesIds)" />
+
+        <div id="selectedRolesContainer" class="mb-3">
+            <strong>Selected Roles:</strong>
+            <ul id="selectedRolesList" class="list-group mb-3">
+                @foreach (var role in Model.Group.roles)
+                {
+                    <li class="list-group-item">@role.Name</li>
+                }
+            </ul>
+        </div>
+
+        <div class="dropdown mx-8">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="roleDropdown" data-toggle="dropdown"
+                data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+                Select Roles
+            </button>
+
+            <div class="dropdown-menu mb-3 px-3 pb-2" aria-labelledby="roleDropdown" id="rolessDropdown">
+                <div class="input-group">
+                    <input type="text" class="form-control mx-2" id="searchRoles" placeholder="Search Roles...">
+                    <button class="btn btn-outline-primary" id="searchButton">Search</button>
+                </div>
+                <div id="roleItemsContainer">
+                    @foreach (var role in Model.Roles) // Initial rendering, will be updated by JS
+                    {
+                        <div class="form-check dropdown-item group-item mx-8" data-group-name="@role.Name">
+                            <input type="checkbox" class="form-check-input" value="@role.Id" name="SelectedRoleIds"
+                                id="role_@role.Id" @if (Model.Group.RolesIds.Contains(role.Id))
+                            {
+                                <text>checked</text>
+                            } />
+                            <label class="form-check-label" for="role_@role.Id">@role.Name</label>
+                        </div>
+                    }
+                </div>
+                <div class="d-none" id="allRoles" data-all-groups='@Html.Raw(Json.Serialize(Model.Roles))'></div>
+            </div>
+        </div>
+        <span asp-validation-for="Group.RolesIds" class="text-danger"></span>
+    </div>
+
+    <button style="display:@Html.Raw(actions?.Any(a => a.ActionType == ActionType.Create | a.ActionType == ActionType.Update) == true ? "inline" : "none");"
+            type="Submit" class="btn btn-primary">
+        @Model.Text
+    </button>
+    <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+</form>
+
+@section Scripts {
+    <!-- Include Bootstrap JS and jQuery if not already included -->
+    
+
+    <script>
+        $(document).ready(function () {
+            // Function to filter the Roles based on the search input
+            function filterRoles() {
+                var input = document.getElementById("searchRoles");
+                var filter = input.value.toLowerCase();
+                var allRoles = JSON.parse($('#allRoles').attr('data-all-groups')); // Get all roles
+
+                // Get the currently checked roles
+                var checkedRoles = new Set();
+                $('.dropdown-item input[type="checkbox"]:checked').each(function () {
+                    checkedRoles.add($(this).val());
+                });
+
+                // Clear the previous items in the dropdown
+                $('#roleItemsContainer').empty();
+
+                // First, display the checked roles
+                allRoles.forEach(function (role) {
+                    if (checkedRoles.has(role.Id)) {
+                        var roleItem = $('<div class="form-check dropdown-item group-item mx-8" data-group-name="' + role.name + '"></div>');
+                        roleItem.append('<input type="checkbox" class="form-check-input" value="' + role.Id + '" name="Group.Roles" id="role_' + role.Id + '" checked disabled/>');
+                        roleItem.append('<label class="form-check-label" for="role_' + role.Id + '">' + role.name + '</label>');
+                        $('#roleItemsContainer').append(roleItem);
+                    }
+                });
+
+                // Iterate through all roles and filter based on input
+                for (var i = 0; i < allRoles.length; i++) {
+                    var roleName = allRoles[i].name.toLowerCase(); // Ensure case insensitivity
+
+                    // Check if the role name contains the search input
+                    if (roleName.includes(filter)) {
+                        // Create new group item element
+                        var roleItem = $('<div class="form-check dropdown-item group-item mx-8" data-group-name="' + allRoles[i].name + '"></div>');
+                        var isChecked = checkedRoles.has(allRoles[i].Id) ? 'checked' : ''; // Check if this group was previously selected
+
+                        roleItem.append('<input type="checkbox" class="form-check-input" value="' + allRoles[i].Id + '" name="Group.Roles" id="role_' + allRoles[i].Id + '" ' + isChecked + '/>');
+                        roleItem.append('<label class="form-check-label" for="group_' + allRoles[i].Id + '">' + allRoles[i].name + '</label>');
+
+                        // Append the new role item to the container
+                        $('#roleItemsContainer').append(roleItem);
+                    }
+                }
+
+                // Optionally limit to the first 10 items after filtering
+                var displayedItems = $('#roleItemsContainer .group-item');
+                displayedItems.slice(10).hide(); // Hide any items beyond the first 10
+                displayedItems.slice(0, 10).show(); // Show only the first 10 items
+
+                // Re-bind the change event for the checkboxes since they are recreated
+                $('#roleItemsContainer input[type="checkbox"]').change(function () {
+                    updateSelectedRolesDisplay();
+                });
+            }
+
+            // Function to handle the search button click
+            $('#searchButton').click(function (event) {
+                event.preventDefault(); // Prevent the default form submission behavior
+                event.stopPropagation(); // Prevent the dropdown from closing
+                filterRoles(); // Call the filter function
+            });
+
+            // Prevent dropdown from closing when clicking on items
+            $('.dropdown-item').click(function (event) {
+                event.stopPropagation(); // Prevent event from bubbling up
+            });
+
+            // Function to update the display of selected roles
+            function updateSelectedRolesDisplay() {
+                var checkedItems = $('.dropdown-item input[type="checkbox"]:checked');
+                var selectedRolesList = $('#selectedRolesList');
+                var previouslySelectedRoles = $('#previouslySelectedRoles');
+
+                // Create a set to store the current selected role IDs
+                var selectedRoleIds = new Set(previouslySelectedRoles.val().split(','));
+
+                // Loop through each checked item to manage the selected roles display
+                checkedItems.each(function () {
+                    var roleId = $(this).val();
+                    var roleName = $(this).closest('.dropdown-item').data('group-name');
+
+                    // Add the role ID to the set if it's checked
+                    if (!selectedRoleIds.has(roleId)) {
+                        selectedRoleIds.add(roleId);
+                        // Append the role name as a list item
+                        selectedRolesList.append('<li class="list-group-item">' + roleName + '</li>');
+                    }
+                });
+
+                // Loop through the unchecked items to remove them from the display
+                $('.dropdown-item input[type="checkbox"]:not(:checked)').each(function () {
+                    var roleId = $(this).val();
+                    var roleName = $(this).closest('.dropdown-item').data('group-name');
+
+                    // If the role ID is in the set, remove it from the set and the display
+                    if (selectedRoleIds.has(roleId)) {
+                        selectedRoleIds.delete(roleId);
+                        // Remove the role name from the selected roles list
+                        selectedRolesList.find('li').filter(function () {
+                            return $(this).text() === roleName; // Check based on role name
+                        }).remove();
+                    }
+                });
+
+                // Update the hidden field with the combined set of selected role IDs
+                previouslySelectedRoles.val(Array.from(selectedRoleIds).join(','));
+            }
+
+            // Attach change event listeners to checkboxes
+            $('.dropdown-item input[type="checkbox"]').on('change', updateSelectedRolesDisplay);
+
+
+            // Initial event binding for checkboxes on page load
+            $('#groupItemsContainer input[type="checkbox"]').change(function () {
+                updateSelectedRolesDisplay();
+            });
+
+            // Close dropdown when clicking outside
+            $(document).click(function (event) {
+                if (!$(event.target).closest('.dropdown').length) {
+                    $('.dropdown-menu').removeClass('show');
+                }
+            });
+        });
+    </script>
+
+}
+
+
+<style>
+    .dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+        width: 450px;
+    }
+
+    #groupDropdown {
+        width: 150px;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .form-check-input {
+        margin-right: 0.5rem;
+    }
+</style>
